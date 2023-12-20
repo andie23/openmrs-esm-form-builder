@@ -10,7 +10,7 @@
     "*.{js,jsx,ts,tsx}": "eslint --cache --fix"
   },
   "scripts": {
-    "start": "openmrs develop",
+    "start": "openmrs develop --backend=https://ohri-dev.globalhealthapp.net",
     "serve": "webpack serve --mode=development",
     "build": "webpack --mode production",
     "analyze": "webpack --mode=production --env.analyze=true",
@@ -50,7 +50,7 @@
   },
   "dependencies": {
     "@carbon/react": "^1.38.0",
-    "@openmrs/openmrs-form-engine-lib": "next",
+    "@openmrs/openmrs-form-engine-lib": "1.0.0-pre.505",
     "dotenv": "^16.3.1",
     "file-loader": "^6.2.0",
     "fuzzy": "^0.1.3",

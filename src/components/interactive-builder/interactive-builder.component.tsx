@@ -21,6 +21,7 @@ import SectionModal from './section-modal.component';
 import { DraggableQuestion } from './draggable-question.component';
 import { Droppable } from './droppable-container.component';
 import styles from './interactive-builder.scss';
+import ReferenceSectionModal from './reference-section-modal.component';
 
 interface InteractiveBuilderProps {
   isLoading: boolean;
@@ -48,6 +49,7 @@ const InteractiveBuilder: React.FC<InteractiveBuilderProps> = ({ isLoading, onSc
   const [showAddPageModal, setShowAddPageModal] = useState(false);
   const [showAddQuestionModal, setShowAddQuestionModal] = useState(false);
   const [showAddSectionModal, setShowAddSectionModal] = useState(false);
+  const [showReferenceSectionModal, setShowReferenceSectionModal] = useState(true);
   const [showDeletePageModal, setShowDeletePageModal] = useState(false);
   const [showDeleteQuestionModal, setShowDeleteQuestionModal] = useState(false);
   const [showDeleteSectionModal, setShowDeleteSectionModal] = useState(false);
@@ -86,6 +88,10 @@ const InteractiveBuilder: React.FC<InteractiveBuilderProps> = ({ isLoading, onSc
 
   const addSection = () => {
     setShowAddSectionModal(true);
+  };
+
+  const referenceSection = () => {
+    setShowReferenceSectionModal(true);
   };
 
   const addQuestion = () => {
@@ -299,6 +305,17 @@ const InteractiveBuilder: React.FC<InteractiveBuilderProps> = ({ isLoading, onSc
           resetIndices={resetIndices}
           showModal={showAddSectionModal}
           onModalChange={setShowAddSectionModal}
+        />
+      ) : null}
+
+      {showReferenceSectionModal ? (
+        <ReferenceSectionModal
+          schema={schema}
+          onSchemaChange={onSchemaChange}
+          pageIndex={pageIndex}
+          resetIndices={resetIndices}
+          showModal={showReferenceSectionModal}
+          onModalChange={setShowReferenceSectionModal}
         />
       ) : null}
 
@@ -540,6 +557,18 @@ const InteractiveBuilder: React.FC<InteractiveBuilderProps> = ({ isLoading, onSc
                   iconDescription={t('addSection', 'Add Section')}
                 >
                   {t('addSection', 'Add Section')}
+                </Button>
+                <Button
+                  className={styles.addSectionButton}
+                  kind="ghost"
+                  renderIcon={Add}
+                  onClick={() => {
+                    referenceSection();
+                    setPageIndex(pageIndex);
+                  }}
+                  iconDescription={t('referenceSection', 'Reference Section')}
+                >
+                  {t('referenceSection', 'Reference Section')}
                 </Button>
               </div>
             ))

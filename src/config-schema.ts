@@ -43,4 +43,9 @@ export const configSchema = {
     _default: true,
     _description: 'Whether to show a warning about possibly losing data in the forms dashboard',
   },
+  componentFormEncounterTypeUuid: {
+    _type: Type.String,
+    _default: '88b84b7b-9d62-4e1e-a16c-a22df76d11ed',
+    _description: 'The encounter type that the component form will be associated with',
+  },
 };
