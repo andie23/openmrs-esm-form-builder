@@ -52,8 +52,8 @@ import { usePersonAttributeLookup } from '../../hooks/usePersonAttributeLookup';
 import { usePersonAttributeName } from '../../hooks/usePersonAttributeName';
 import { usePersonAttributeTypes } from '../../hooks/usePersonAttributeTypes';
 import { usePrograms, useProgramWorkStates } from '../../hooks/useProgramStates';
-import styles from './question-modal.scss';
 import { getDatePickerType } from './add-question.modal';
+import styles from './question-modal.scss';
 
 interface EditQuestionModalProps {
   closeModal: () => void;
@@ -253,7 +253,7 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
     } else {
       if (questionToEdit.type === 'programState') {
         mappedAnswers = selectedProgramState.map((answer) => ({
-          value: answer.concept.uuid,
+          value: answer.uuid,
           label: answer.concept.display,
         }));
       } else {
@@ -350,14 +350,14 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
 
   useEffect(() => {
     const previousStates = programWorkflow?.states.filter((state) =>
-      questionToEdit.questionOptions.answers.some((answer) => answer.value === state.concept.uuid),
+      questionToEdit.questionOptions.answers.some((answer) => answer.value === state.uuid),
     );
     setSelectedProgramState(previousStates);
   }, [programWorkflow, questionToEdit.questionOptions.answers]);
 
   return (
     <>
-      <ModalHeader closeModal={closeModal} title={t('editQuestion', 'Edit question')} />
+      <ModalHeader className={styles.modalHeader} closeModal={closeModal} title={t('editQuestion', 'Edit question')} />
       <Form className={styles.form} onSubmit={(event: React.SyntheticEvent) => event.preventDefault()}>
         <ModalBody hasScrollingContent>
           <Stack gap={5}>
@@ -832,8 +832,8 @@ const EditQuestionModal: React.FC<EditQuestionModalProps> = ({
                 name="datePickerType"
                 legendText={t('datePickerType', 'The type of date picker to show')}
               >
-                {/** Filters out the date picker types based on the selected concept's data type. 
-                     If no concept is selected, all date picker types are shown. 
+                {/** Filters out the date picker types based on the selected concept's data type.
+                     If no concept is selected, all date picker types are shown.
                 */}
                 {selectedConcept && selectedConcept.datatype
                   ? datePickerTypeOptions[selectedConcept.datatype.name.toLowerCase()].map((type) => (
