@@ -146,6 +146,10 @@ const AddQuestionModal: React.FC<AddQuestionModalProps> = ({
     programState: ['select'],
   };
 
+  const filteredQuestionTypes: Array<QuestionType> = questionTypes.filter(
+    (questionTypeArg) => questionTypeArg != 'obs' && questionTypeArg != 'complex-obs',
+  );
+
   // Maps the data type of a concept to a date picker type.
   const datePickerTypeOptions: Record<string, Array<DatePickerTypeOption>> = {
     datetime: [{ value: 'both', label: t('calendarAndTimer', 'Calendar and timer'), defaultChecked: true }],
@@ -403,7 +407,7 @@ const AddQuestionModal: React.FC<AddQuestionModalProps> = ({
               >
                 {!renderingType && <SelectItem text={t('chooseRenderingType', 'Choose a rendering type')} value="" />}
 
-                {questionTypes.filter((questionType) => questionType !== 'obs').includes(questionType)
+                {filteredQuestionTypes.includes(questionType)
                   ? renderTypeOptions[questionType].map((type, key) => (
                       <SelectItem key={`${questionType}-${key}`} text={type} value={type} />
                     ))

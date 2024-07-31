@@ -63,12 +63,12 @@ export interface Schema {
       questions: Array<{
         id: string;
         label: string;
-        type: string;
+        type: QuestionType;
         required?: string | boolean | RequiredFieldProps;
         questionOptions: {
           type?: string;
           concept?: string;
-          answers?: Array<Record<string, string>>;
+          answers?: Array<QuestionAnswer>;
           rendering: RenderType;
           max?: string;
           min?: string;
@@ -116,7 +116,7 @@ export interface Section {
 export interface Question {
   id: string;
   label: string;
-  type: string;
+  type: QuestionType;
   questionOptions: QuestionOptions;
   datePickerFormat?: DatePickerType;
   questions?: Array<Question>;
@@ -124,9 +124,15 @@ export interface Question {
   validators?: Array<Record<string, string>>;
 }
 
+export interface QuestionAnswer {
+  label: string;
+  concept?: string;
+  conceptMappings?: Array<Record<string, string>>;
+}
+
 export interface QuestionOptions {
   rendering: RenderType;
-  answers?: Array<Record<string, string>>;
+  answers?: Array<QuestionAnswer>;
   concept?: string;
   conceptMappings?: Array<ConceptMapping>;
   max?: string;

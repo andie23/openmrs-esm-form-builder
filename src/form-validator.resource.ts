@@ -4,7 +4,7 @@ import type { ConfigObject } from './config-schema';
 
 interface Field {
   label: string;
-  concept: string;
+  concept?: string;
   id?: string;
   type?: string;
 }
@@ -34,19 +34,15 @@ export const handleFormValidation = async (
     parsedForm.pages?.forEach((page) =>
       page.sections?.forEach((section: { questions: Array<Question> }) =>
         section.questions?.forEach((question) => {
-          asyncTasks.push(
-            handleQuestionValidation(question, errors, configObject, warnings),
-            handleAnswerValidation(question, errors),
-            handlePatientIdentifierValidation(question, errors),
-          );
-          if (question.type === 'obsGroup') {
+          if (question.type === 'obs')
+            asyncTasks.push(validateConceptsInQuestion(question, errors, configObject, warnings));
+          else if (question.type === 'obsGroup') {
             question?.questions?.forEach((obsGrpQuestion) =>
-              asyncTasks.push(
-                handleQuestionValidation(obsGrpQuestion, errors, configObject, warnings),
-                handleAnswerValidation(obsGrpQuestion, errors),
-              ),
+              asyncTasks.push(validateConceptsInQuestion(obsGrpQuestion, errors, configObject, warnings)),
             );
-          }
+          } else if (question.type === 'patientIdentifier')
+            asyncTasks.push(handlePatientIdentifierValidation(question, errors));
+          if (question.questionOptions.answers) asyncTasks.push(handleAnswerValidation(question, errors));
         }),
       ),
     );
@@ -57,53 +53,59 @@ export const handleFormValidation = async (
   return [errors, warnings]; // Return empty arrays if schema is falsy
 };
 
-const handleQuestionValidation = async (conceptObject, errorsArray, configObject, warningsArray) => {
+const validateConceptsInQuestion = async (
+  question: Question,
+  errorsArray: Array<ErrorMessageResponse>,
+  configObject: ConfigObject['dataTypeToRenderingMap'],
+  warningsArray: Array<WarningMessageResponse>,
+) => {
   const conceptRepresentation =
     'custom:(uuid,display,datatype,answers,conceptMappings:(conceptReferenceTerm:(conceptSource:(name),code)))';
 
-  const searchRef = conceptObject.questionOptions.concept
-    ? conceptObject.questionOptions.concept
-    : conceptObject.questionOptions.conceptMappings?.length
-      ? conceptObject.questionOptions.conceptMappings
+  const searchRef = question.questionOptions.concept
+    ? question.questionOptions.concept
+    : question.questionOptions.conceptMappings?.length
+      ? question.questionOptions.conceptMappings
           ?.map((mapping) => {
             return `${mapping.type}:${mapping.value}`;
           })
           .join(',')
       : '';
 
+  const questionField = { id: question.id, label: question.label, concept: question.questionOptions?.concept };
   if (searchRef) {
     try {
       const { data } = await openmrsFetch(`${restBaseUrl}/concept?references=${searchRef}&v=${conceptRepresentation}`);
       if (data.results.length) {
         const [resObject] = data.results;
         resObject.datatype.name === 'Boolean' &&
-          conceptObject.questionOptions.answers.forEach((answer) => {
+          question.questionOptions.answers.forEach((answer) => {
             if (
               answer.concept !== 'cf82933b-3f3f-45e7-a5ab-5d31aaee3da3' &&
               answer.concept !== '488b58ff-64f5-4f8a-8979-fa79940b1594'
             ) {
               errorsArray.push({
-                errorMessage: `❌ concept "${conceptObject.questionOptions.concept}" of type "boolean" has a non-boolean answer "${answer.label}"`,
-                field: conceptObject,
+                errorMessage: `❌ concept "${question.questionOptions.concept}" of type "boolean" has a non-boolean answer "${answer.label}"`,
+                field: questionField,
               });
             }
           });
 
         resObject.datatype.name === 'Coded' &&
-          conceptObject.questionOptions.answers.forEach((answer) => {
+          question.questionOptions.answers.forEach((answer) => {
             if (!resObject.answers.some((answerObject) => answerObject.uuid === answer.concept)) {
               warningsArray.push({
                 warningMessage: `⚠️ answer: "${answer.label}" - "${answer.concept}" does not exist in the response answers but exists in the form`,
-                field: conceptObject,
+                field: questionField,
               });
             }
           });
 
-        dataTypeChecker(conceptObject, resObject, errorsArray, configObject);
+        dataTypeChecker(question, resObject, errorsArray, configObject);
       } else {
         errorsArray.push({
-          errorMessage: `❓ Concept "${conceptObject.questionOptions.concept}" not found`,
-          field: conceptObject,
+          errorMessage: `❓ Concept "${question.questionOptions.concept}" not found`,
+          field: questionField,
         });
       }
     } catch (error) {
@@ -112,12 +114,12 @@ const handleQuestionValidation = async (conceptObject, errorsArray, configObject
   } else {
     errorsArray.push({
       errorMessage: `❓ No UUID`,
-      field: conceptObject,
+      field: questionField,
     });
   }
 };
 
-const handlePatientIdentifierValidation = async (question, errors) => {
+const handlePatientIdentifierValidation = async (question: Question, errors) => {
   if (question.type === 'patientIdentifier' && !question.questionOptions.identifierType) {
     errors.push({
       errorMessage: `❓ Patient identifier type missing in schema`,
@@ -162,7 +164,7 @@ const dataTypeChecker = (conceptObject, responseObject, array, dataTypeToRenderi
     });
 };
 
-const handleAnswerValidation = async (questionObject, array) => {
+const handleAnswerValidation = async (questionObject: Question, errors: Array<ErrorMessageResponse>) => {
   const answerArray = questionObject.questionOptions.answers;
   const conceptRepresentation =
     'custom:(uuid,display,datatype,conceptMappings:(conceptReferenceTerm:(conceptSource:(name),code)))';
@@ -184,7 +186,7 @@ const handleAnswerValidation = async (questionObject, array) => {
           `${restBaseUrl}/concept?references=${searchRef}&v=${conceptRepresentation}`,
         );
         if (!response.data.results.length) {
-          array.push({
+          errors.push({
             errorMessage: `❌ concept "${answer.concept}" not found`,
             field: answer,
           });

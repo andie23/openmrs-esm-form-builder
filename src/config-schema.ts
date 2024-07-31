@@ -7,6 +7,7 @@ export const configSchema = {
     _type: Type.Array,
     _description: 'Provides information that the processor uses to render a field',
     _default: [
+      'complex-obs',
       'control',
       'encounterDatetime',
       'encounterLocation',
